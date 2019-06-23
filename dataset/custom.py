@@ -11,11 +11,14 @@ class CustomDataset(data.Dataset):
         
         if train:
             classes, class_to_idx = self.find_classes(os.path.join(root, 'train'))
-            samples = self.make_dataset(os.path.join(root, 'train'), class_to_idx)
+            samples = self.make_dataset_multi_folders(os.path.join(root, 'train'), class_to_idx)
         
         else:
-            classes, class_to_idx = self.find_classes(os.path.join(root, 'val'))
-            samples = self.make_dataset(os.path.join(root, 'val'), class_to_idx)
+            #classes, class_to_idx = self.find_classes(os.path.join(root, 'val'))
+            #samples = self.make_dataset(os.path.join(root, 'val'), class_to_idx)
+            classes, class_to_idx = self.find_classes(os.path.join(root, 'train'))
+            samples = self.make_dataset_single_folder(os.path.join(root, 'val'), class_to_idx)
+
 
         self.classes = classes
         self.class_to_idx = class_to_idx
@@ -48,7 +51,7 @@ class CustomDataset(data.Dataset):
         class_to_idx = {classes[i]: i for i in range(len(classes))}
         return classes, class_to_idx
 
-    def make_dataset(self, dir, class_to_idx):
+    def make_dataset_multi_folders(self, dir, class_to_idx):
         images = []
         dir = os.path.expanduser(dir)
         for target in sorted(os.listdir(dir)):
@@ -62,5 +65,21 @@ class CustomDataset(data.Dataset):
                         path = os.path.join(root, fname)
                         item = (path, class_to_idx[target])
                         images.append(item)
+
+        return images
+
+    def make_dataset_single_folder(self, dir, class_to_idx):
+        images = []
+        dir = os.path.expanduser(dir)
+        files = os.listdir(dir)
+        for file in files:
+            if file.endswith('txt'):
+                fh = open(os.path.join(dir, file), 'r')
+                for line in fh:  
+                    words = line.split() 
+                    path = os.path.join(dir, 'images')
+                    path = os.path.join(path, words[0])
+                    item = (path, class_to_idx[words[1]])
+                    images.append(item)
 
         return images

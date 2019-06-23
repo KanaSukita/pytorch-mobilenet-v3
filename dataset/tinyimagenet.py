@@ -20,17 +20,15 @@ class TinyImagenet:
 
         test_transform = transforms.Compose(
             [transforms.ToTensor(),
-             transforms.Normalize(mean=mean, std=std)])
+             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-        self.trainloader = DataLoader(CustomDataset(root='./data', train=True,
-                                                                   download=args.download_dataset,
+        self.trainloader = DataLoader(CustomDataset(root='/home/wenjun/Workspace/dataset/tiny-imagenet-200', train=True,
                                                                    transform=train_transform),
                                       batch_size=args.batch_size,
                                       shuffle=args.shuffle, num_workers=args.dataloader_workers,
                                       pin_memory=args.pin_memory)
 
-        self.testloader = DataLoader(CustomDataset(root='./data', train=False,
-                                                                  download=args.download_dataset,
+        self.testloader = DataLoader(CustomDataset(root='/home/wenjun/Workspace/dataset/tiny-imagenet-200', train=False,
                                                                   transform=test_transform),
                                       batch_size=args.batch_size,
                                       shuffle=False, num_workers=args.dataloader_workers,
