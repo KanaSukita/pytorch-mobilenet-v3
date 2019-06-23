@@ -116,7 +116,7 @@ class MobileBottleneck(nn.Module):
 
 
 class MobileNetV3(nn.Module):
-    def __init__(self, n_class=1000, input_size=224, dropout=0.8, mode='small', width_mult=1.0):
+    def __init__(self, n_class=1000, input_size=224, dropout=0.8, mode='small', width_mult=1.0, classify=True):
         super(MobileNetV3, self).__init__()
         input_channel = 16
         last_channel = 1280
@@ -164,6 +164,7 @@ class MobileNetV3(nn.Module):
         self.last_channel = make_divisible(last_channel * width_mult) if width_mult > 1.0 else last_channel
         self.features = [conv_bn(3, input_channel, 2, nlin_layer=Hswish)]
         self.classifier = []
+        self.classify = classify
 
         # building mobile blocks
         for k, exp, c, se, nl, s in mobile_setting:
@@ -193,17 +194,19 @@ class MobileNetV3(nn.Module):
         self.features = nn.Sequential(*self.features)
 
         # building classifier
-        self.classifier = nn.Sequential(
-            nn.Dropout(p=dropout),    # refer to paper section 6
-            nn.Linear(last_channel, n_class),
-        )
+        if classify:
+            self.classifier = nn.Sequential(
+                nn.Dropout(p=dropout),    # refer to paper section 6
+                nn.Linear(last_channel, n_class),
+            )
 
         self._initialize_weights()
 
     def forward(self, x):
         x = self.features(x)
         x = x.mean(3).mean(2)
-        x = self.classifier(x)
+        if self.classify:
+            x = self.classifier(x)
         return x
 
     def _initialize_weights(self):

@@ -14,7 +14,7 @@ def main():
     #_, config_args.summary_dir, config_args.checkpoint_dir = create_experiment_dirs(
     #    config_args.experiment_dir)
 
-    model = MobileNetV3(n_class=200, input_size=64)
+    model = MobileNetV3(n_class=200, input_size=64, classify=config_args.classify)
 
     if config_args.cuda:
         model.cuda()

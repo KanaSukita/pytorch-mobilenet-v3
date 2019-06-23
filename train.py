@@ -6,8 +6,10 @@ from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 from torch.optim.rmsprop import RMSprop
 from tqdm import tqdm
+from loss import FocalLoss
 
 from utils import AverageTracker
+from models import ArcMarginModel
 
 class Train:
     def __init__(self, model, trainloader, valloader, args):
@@ -154,14 +156,26 @@ class Train:
             param_group['lr'] = learning_rate
 
     def create_optimization(self):
-        self.loss = nn.CrossEntropyLoss()
+        if self.args.loss_function == 'FocalLoss':
+            self.loss = FocalLoss(gamma=self.args.gamma)
+        else:
+            self.loss = nn.CrossEntropyLoss()
 
         if self.args.cuda:
             self.loss.cuda()
 
-        self.optimizer = RMSprop(self.model.parameters(), self.args.learning_rate,
-                                 momentum=self.args.momentum,
-                                 weight_decay=self.args.weight_decay)
+        if self.args.classify:
+            self.metric_fc = ArcMarginModel(self.args)
+            self.optimizer = RMSprop(self.model.parameters(), self.args.learning_rate,
+                                    momentum=self.args.momentum,
+                                    weight_decay=self.args.weight_decay)
+
+        else:
+            self.optimizer = RMSprop([{'params': self.model.parameters()}, 
+                                      {'params': self.metric_fc.parameters()}],
+                                    self.args.learning_rate,
+                                    momentum=self.args.momentum,
+                                    weight_decay=self.args.weight_decay)
 
     def load_pretrained_model(self):
         try:

@@ -19,6 +19,9 @@
   "learning_rate": 1e-4,
   "learning_rate_decay": 0.98,
   "dropout_prob": 0.2,
+  "classify": true,
+  "loss_function": "FocalLoss",
+  "gamma": 2,
 
   "resume_from": "checkpoint.pth.tar",
   "checkpoint_dir": "checkpoint/",
@@ -29,5 +32,10 @@
 
   "cuda": true,
   "pin_memory": true,
-  "async_loading": true
+  "async_loading": true,
+
+  "emb_size": 576,
+  "easy_margin": false,
+  "margin_m": 0.5,
+  "margin_s": 64.0
 }
