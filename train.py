@@ -1,3 +1,5 @@
+import shutil
+
 import torch.nn as nn
 import torch.optim
 from tensorboardX import SummaryWriter
@@ -5,9 +7,12 @@ from torch.autograd import Variable
 from torch.optim.rmsprop import RMSprop
 from tqdm import tqdm
 
+from utils import AverageTracker
+
 class Train:
     def __init__(self, model, trainloader, valloader, args):
         self.model = model
+        self.model_dict = self.model.state_dict()
         self.trainloader = trainloader
         self.valloader = valloader
         self.args = args
@@ -24,7 +29,7 @@ class Train:
         self.load_checkpoint(self.args.resume_from)
 
         # Tensorboard Writer
-        self.summary_writer = SummaryWriter(log_dir=args.summary_dir)
+        self.summary_writer = SummaryWriter()
 
     def train(self):
         for cur_epoch in range(self.start_epoch, self.args.num_epochs):
@@ -60,9 +65,9 @@ class Train:
 
                 # Top-1 and Top-5 Accuracy Calculation
                 cur_acc1, cur_acc5 = self.compute_accuracy(output.data, target, topk=(1, 5))
-                loss.update(cur_loss.data[0])
-                top1.update(cur_acc1[0])
-                top5.update(cur_acc5[0])
+                loss.update(cur_loss.item())
+                top1.update(cur_acc1.item())
+                top5.update(cur_acc5.item())
 
             # Summary Writing
             self.summary_writer.add_scalar("epoch-loss", loss.avg, cur_epoch)
@@ -99,17 +104,18 @@ class Train:
             if self.args.cuda:
                 data, target = data.cuda(async=self.args.async_loading), target.cuda(
                     async=self.args.async_loading)
-            data_var, target_var = Variable(data, volatile=True), Variable(target, volatile=True)
+            data_var, target_var = Variable(data), Variable(target)
 
             # Forward pass
-            output = self.model(data_var)
+            with torch.no_grad():
+                output = self.model(data_var)
             cur_loss = self.loss(output, target_var)
 
             # Top-1 and Top-5 Accuracy Calculation
             cur_acc1, cur_acc5 = self.compute_accuracy(output.data, target, topk=(1, 5))
-            loss.update(cur_loss.data[0])
-            top1.update(cur_acc1[0])
-            top5.update(cur_acc5[0])
+            loss.update(cur_loss.item())
+            top1.update(cur_acc1.item())
+            top5.update(cur_acc5.item())
 
         if cur_epoch != -1:
             # Summary Writing
@@ -161,7 +167,10 @@ class Train:
         try:
             print("Loading ImageNet pretrained weights...")
             pretrained_dict = torch.load(self.args.pretrained_path)
-            self.model.load_state_dict(pretrained_dict)
+            #self.model.load_state_dict(pretrained_dict)
+            for params_name in pretrained_dict: 
+                if params_name in self.model_dict and pretrained_dict[params_name].size() == self.model_dict[params_name].size(): 
+                    self.model.state_dict()[params_name].copy_(pretrained_dict[params_name])
             print("ImageNet pretrained weights loaded successfully.\n")
         except:
             print("No ImageNet pretrained weights exist. Skipping...\n")

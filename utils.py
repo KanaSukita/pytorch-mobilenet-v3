@@ -16,9 +16,9 @@ def parse_args():
     :rtype: tuple
     """
     # Create a parser
-    parser = argparse.ArgumentParser(description="MobileNet-V2 PyTorch Implementation")
+    parser = argparse.ArgumentParser(description="MobileNet V3 PyTorch Implementation")
     parser.add_argument('--version', action='version', version='%(prog)s 0.0.1')
-    parser.add_argument('--config', default=None, type=str, help='Configuration file')
+    parser.add_argument('--config', default='config/tinyimagenet_test_exp.json', type=str, help='Configuration file')
 
     # Parse the arguments
     args = parser.parse_args()

@@ -1,6 +1,6 @@
 import torch.backends.cudnn as cudnn
 
-from tinyimagenet import TinyImagenet
+from dataset.tinyimagenet import TinyImagenet
 from mobilenetv3 import MobileNetV3
 from train import Train
 from utils import parse_args, create_experiment_dirs
@@ -11,10 +11,10 @@ def main():
     config_args = parse_args()
 
     # Create the experiment directories
-    _, config_args.summary_dir, config_args.checkpoint_dir = create_experiment_dirs(
-        config_args.experiment_dir)
+    #_, config_args.summary_dir, config_args.checkpoint_dir = create_experiment_dirs(
+    #    config_args.experiment_dir)
 
-    model = MobileNetV3(config_args)
+    model = MobileNetV3(n_class=200, input_size=64)
 
     if config_args.cuda:
         model.cuda()
